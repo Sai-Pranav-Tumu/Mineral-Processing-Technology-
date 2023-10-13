@@ -43,6 +43,14 @@ if uploaded_file is not None:
     cv2.drawContours(image_color, contours, -1, (255, 0, 0), 2)
     cv2.putText(image_color, f'Perimeter: {perimeter} pixels', (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
+    # Smallest Circle
+    for contour in contours:
+        (x, y), radius = cv2.minEnclosingCircle(contour)
+        center = (int(x), int(y))
+        radius = int(radius)
+        radius = int(radius * 1.018)
+        cv2.circle(image_color, center, radius, (255, 0, 0), 2)
+
     # Calculate the moments of the image for the centroid
     M = cv2.moments(original_image)
     cX = int(M["m10"] / M["m00"])

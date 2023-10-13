@@ -21,6 +21,40 @@ if uploaded_file is not None:
     contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 
+
+    # Create a single image for overlaying all metrics
+    image_color = cv2.cvtColor(original_image.copy(), cv2.COLOR_GRAY2BGR)
+
+    # Calculate total surface area (TSA)
+    total_area = sum(cv2.contourArea(contour) for contour in contours)
+    cv2.putText(image_color, f'TSA: {total_area} pixels', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+
+    # Find the largest contour
+    largest_contour = max(contours, key=cv2.contourArea)
+    largest_contour_reshaped = largest_contour.reshape(-1, 2)
+    distances = distance.cdist(largest_contour_reshaped, largest_contour_reshaped, 'euclidean')
+    max_distance = np.unravel_index(np.argmax(distances), distances.shape)
+    major_axis_length = int(distances[max_distance])
+    cv2.line(image_color, tuple(largest_contour_reshaped[max_distance[0]]), tuple(largest_contour_reshaped[max_distance[1]]), (255, 0, 0), 2)
+    cv2.putText(image_color, f"Major Axis Length: {major_axis_length} Pixels", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+
+    # Perimeter
+    perimeter = sum(int(cv2.arcLength(contour, True)) for contour in contours)
+    cv2.drawContours(image_color, contours, -1, (255, 0, 0), 2)
+    cv2.putText(image_color, f'Perimeter: {perimeter} pixels', (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+
+    # Calculate the moments of the image for the centroid
+    M = cv2.moments(original_image)
+    cX = int(M["m10"] / M["m00"])
+    cY = int(M["m01"] / M["m00"])
+    cv2.circle(image_color, (cX, cY), 3, (255, 0, 0), -1)
+    cv2.putText(image_color, f"Centroid: ({cX}, {cY})", (cX - 50, cY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+    st.image(image_color, use_column_width=True)
+
+
+
+
+
     # Circle
     # Iterate over each contour to find the minimal enclosing circle for each contour
     image_color = cv2.cvtColor(original_image.copy(), cv2.COLOR_GRAY2BGR)
